@@ -1,0 +1,124 @@
+<canvas id="snake" width="200" height="200"></canvas>
+<div>
+    Current Score : <span id="current"></span><br>
+    High Score    : <span id="high"></span>
+</div>
+
+<script>
+    canvas = document.getElementById("snake")
+    ctx    = canvas.getContext("2d"); 
+
+    curspan   = document.getElementById("current")
+    highspan  = document.getElementById("high")
+    highscore = 0
+    
+    width  = canvas.width
+    height = canvas.height
+    boxSize = 20
+    grid    = Math.floor(width/boxSize)
+
+    dir    = {x:1, y:0}
+    trail  = [{x:Math.floor(grid/2), y: Math.floor(grid/2)}]
+
+    clearColor = "#aaaaff"
+    fruitColor = "#ff0000"
+    snakeColor = "#000000"
+
+    function genFruit(){
+        while(true){
+            fruit = { x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid) }
+            if(validateFruit()) break;
+        }
+    }
+
+    function validateFruit(){
+        for(var i=0; i<trail.length; i++)
+            if(trail[i].x==fruit.x && trail[i].y==fruit.y) return false;
+        return true;
+    }
+
+    /* Drawing functions */
+    function drawPixel(pt){
+        ctx.fillRect(pt.x*boxSize, pt.y*boxSize, boxSize-1, boxSize-1);
+    }
+
+    function draw(){
+        ctx.fillStyle = snakeColor;
+        trail.forEach(pt => drawPixel(pt));
+
+        ctx.fillStyle = fruitColor;
+        drawPixel(fruit);
+    }
+
+    function clearTrail(){
+        ctx.fillStyle = clearColor;
+        trail.forEach(pt => drawPixel(pt));
+    }
+
+    /* Snake movement handler */
+    function move(){
+        var pos  = trail[trail.length-1]
+        var next = {x:(pos.x+dir.x+grid)%grid, y:(pos.y+dir.y+grid)%grid}
+
+        // Collision detection and handling
+        trail.forEach(pt => {
+            if(pt.x==next.x && pt.y==next.y){
+                clearTrail();
+                trail = [next];
+                return
+            }
+        })
+
+        trail.push(next);
+
+        // Fruit detection and handling
+        if (next.x == fruit.x && next.y==fruit.y){
+            if (trail.length < grid * grid) genFruit();
+        }
+        else{
+            ctx.fillStyle = "#aaaaff";
+            drawPixel(trail.shift());
+        }
+    }
+
+    function scoreboard(){
+        // Handles Scorboard Logic
+        // TODO: Update with pixel art
+        score = trail.length;
+        curspan.innerHTML = score;
+        if (score > highscore){ highscore = score}
+        highspan.innerHTML = highscore;
+    }
+
+    function arrowKeyListener(e){
+        /* Handler function to detect arrow key press */
+        if (keyFlag) return;
+        switch(e.keyCode){
+            case 38: if(dir.x!=0) {dir={x:0, y:-1}; keyFlag = true}; break;
+            case 40: if(dir.x!=0) {dir={x:0, y:1}; keyFlag = true};  break;
+            case 39: if(dir.y!=0) {dir={x:1, y:0}; keyFlag = true};break;
+            case 37: if(dir.y!=0) {dir={x:-1, y:0}; keyFlag = true}; break;
+        }
+    }
+
+    function initBoard(){
+        /* Initialization function to generate pixel board */
+        ctx.fillStyle = clearColor;
+        for(var i=0; i<grid; i++)
+            for(var j=0; j<grid; j++)
+                drawPixel({x:i, y:j});
+    }
+
+    function gameLoop(){
+        move();
+        draw();
+        scoreboard();
+        ctx.stroke();
+        keyFlag = false;
+    }
+
+    initBoard();
+    genFruit();
+    document.addEventListener("keydown", arrowKeyListener, false);
+    var timer = setInterval(gameLoop, 200)
+</script>

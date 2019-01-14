@@ -1,2 +1,2 @@
 # FunProjects
-A hodgepodgeof fun coding projects
+A hodgepodge of fun coding projects
